@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0b1221">
+  <meta name="description" content="ميزان جبري تفاعلي: اختر أو اكتب أي معادلة خطية واستخدم الرموز الرياضية وشاهد حلها.">
+  <title>مختبر الميزان الجبري | Algebra Balance Lab</title>
+  <style>
+    :root{
+      color-scheme:dark;
+      --bg:#090e19;--surface:#111b2b;--surface2:#142037;--border:rgba(136,171,213,.18);
+      --text:#edf7ff;--muted:#8fa6bc;--cyan:#54e6ee;--cyan-soft:rgba(84,230,238,.13);
+      --amber:#ffc16d;--green:#60f3b9;--red:#fca2aa;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;width:100%;margin:0;overflow:hidden}
+    body{font-family:Tahoma,"Segoe UI",Arial,sans-serif;color:var(--text);background:radial-gradient(ellipse at 50% -5%,#1c2a45 0%,#0b1221 48%,#080c17 100%);-webkit-tap-highlight-color:transparent}
+    button,input{font:inherit}
+    button{cursor:pointer;touch-action:manipulation}
+    button:focus-visible,input:focus-visible{outline:3px solid var(--cyan);outline-offset:3px}
+    .app{height:100vh;height:100dvh;max-width:1600px;padding:clamp(9px,1.6vw,22px);padding-top:max(9px,env(safe-area-inset-top));padding-bottom:max(9px,env(safe-area-inset-bottom));margin:auto;display:flex;flex-direction:column;gap:clamp(7px,1.15vh,13px);overflow:hidden}
+    .topbar{flex:none;display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:43px}
+    .brand{display:flex;align-items:center;gap:11px;min-width:0}
+    .brand-icon{width:40px;height:40px;border:1px solid rgba(84,230,238,.42);border-radius:13px;display:grid;place-items:center;background:linear-gradient(150deg,#162a40,#10202d);box-shadow:inset 0 0 18px rgba(84,230,238,.06)}
+    .brand-icon svg{width:25px;height:25px}
+    .brand-title{font-size:clamp(15px,1.55vw,21px);font-weight:800;white-space:nowrap}
+    .brand-sub{font-size:clamp(10px,.83vw,12px);color:var(--muted);margin-top:2px}
+    .top-actions{display:flex;gap:8px;align-items:center}
+    .tiny-btn{height:37px;min-width:39px;border:1px solid var(--border);border-radius:12px;color:#cbdce9;background:#142035;display:grid;place-items:center;gap:5px;padding:0 11px;font-size:12px;font-weight:800;transition:.18s}
+    .tiny-btn:hover{border-color:rgba(84,230,238,.5);color:var(--cyan)}
+    .tiny-btn svg{width:17px;height:17px}
+    .equation-header{flex:none;position:relative;border:1px solid var(--border);border-radius:18px;background:linear-gradient(110deg,rgba(26,41,62,.95),rgba(19,30,47,.9));padding:clamp(10px,1.4vh,16px) 16px;display:flex;align-items:center;justify-content:center;gap:clamp(12px,2vw,28px);min-height:73px;box-shadow:0 10px 30px rgba(0,0,0,.1)}
+    .eq-mark{display:flex;gap:8px;align-items:center;position:absolute;right:18px;top:50%;transform:translateY(-50%);font-size:12px;color:#99acbc}
+    .eq-mark i{width:7px;height:7px;border-radius:50%;background:var(--cyan);box-shadow:0 0 10px var(--cyan)}
+    .formula{direction:ltr;unicode-bidi:isolate;font-family:Cambria,"Times New Roman",serif;font-size:clamp(31px,3.2vw,48px);font-weight:700;letter-spacing:.7px;white-space:nowrap;text-shadow:0 2px 18px rgba(255,255,255,.06)}
+    .formula .fx{color:var(--cyan)}.formula .fc{color:var(--amber)}
+    .eq-side{position:absolute;left:18px;top:50%;transform:translateY(-50%);display:flex;align-items:center;gap:7px;color:var(--muted);font-size:11px}
+    .eq-side svg{width:16px;height:16px;color:var(--cyan)}
+    .stage{position:relative;flex:1 1 0;min-height:0;overflow:hidden;border:1px solid rgba(103,160,192,.21);border-radius:20px;background:radial-gradient(ellipse at 52% 49%,rgba(28,58,82,.32),transparent 55%),linear-gradient(175deg,#111b2b 4%,#0e1728 73%,#0a1323);isolation:isolate}
+    .stage:before{content:"";position:absolute;inset:0;opacity:.34;pointer-events:none;background-image:linear-gradient(rgba(83,145,176,.08) 1px,transparent 1px),linear-gradient(90deg,rgba(83,145,176,.08) 1px,transparent 1px);background-size:31px 31px;mask-image:linear-gradient(to bottom,transparent 10%,#000 55%)}
+    .stage:after{content:"";position:absolute;inset:auto 0 0;height:1px;background:linear-gradient(90deg,transparent,var(--cyan),transparent);opacity:.32}
+    .stage-caption{position:absolute;right:clamp(12px,2vw,28px);top:clamp(11px,2vh,21px);display:flex;align-items:center;gap:7px;z-index:3;color:#90a9c0;font-size:clamp(10px,1vw,13px)}
+    .stage-caption .dot{height:7px;width:7px;border-radius:50%;background:var(--cyan);box-shadow:0 0 9px var(--cyan)}
+    .stage-number{position:absolute;left:clamp(12px,2vw,28px);top:clamp(11px,2vh,21px);z-index:3;font-family:monospace;letter-spacing:2px;color:#718ba1;font-size:11px;direction:ltr}
+    .scale-svg{width:100%;height:100%;position:absolute;inset:0;display:block;overflow:visible;pointer-events:none}
+    .scale-svg text{paint-order:stroke;stroke:rgba(11,19,32,.45);stroke-width:.6px;font-family:Tahoma,"Segoe UI",Arial,sans-serif;direction:ltr;unicode-bidi:bidi-override}
+    .readouts{direction:ltr;position:absolute;left:50%;transform:translateX(-50%);bottom:clamp(8px,1.3vh,16px);display:flex;gap:8px;align-items:center;justify-content:center;z-index:3;width:max-content;max-width:calc(100% - 20px)}
+    .readout{padding:7px 14px;border:1px solid rgba(112,152,183,.2);border-radius:11px;background:rgba(13,23,37,.78);font-size:clamp(11px,1.15vw,14px);color:#b9cfde;backdrop-filter:blur(9px);white-space:nowrap;direction:ltr}
+    .readout strong{font-size:1.13em}.readout.left strong{color:var(--cyan)}.readout.right strong{color:var(--amber)}
+    .readout.vs{font-size:clamp(15px,1.7vw,20px);color:#93aec1;padding:4px 5px;border:0;background:none}
+    .control-panel{flex:none;display:flex;align-items:center;gap:clamp(10px,1.4vw,21px);padding:clamp(12px,1.75vh,19px) clamp(12px,1.8vw,24px);border-radius:19px;border:1px solid var(--border);background:linear-gradient(120deg,rgba(21,34,53,.98),rgba(16,27,43,.98));box-shadow:0 12px 32px rgba(0,0,0,.14)}
+    .slider-group{min-width:0;flex:1;display:flex;gap:clamp(8px,1.3vw,16px);align-items:center;direction:rtl}
+    .slider-title{min-width:76px;display:flex;flex-direction:column;gap:5px}
+    .slider-title span:first-child{color:var(--muted);font-size:clamp(10px,.95vw,13px);white-space:nowrap}
+    .slider-title span:last-child{font-weight:800;font-size:clamp(22px,2vw,29px);color:var(--cyan);white-space:nowrap;direction:ltr;text-align:right}
+    .range-wrap{flex:1;min-width:55px;display:flex;align-items:center;gap:9px;direction:ltr}
+    .step-btn{flex:none;width:35px;height:35px;display:grid;place-items:center;background:#1d3447;border:1px solid #34546a;color:var(--cyan);border-radius:10px;font-size:25px;line-height:1;transition:.2s}
+    .step-btn:hover:not(:disabled){background:#254a5b;border-color:var(--cyan)}
+    .step-btn:disabled{opacity:.35;cursor:not-allowed}
+    .range-track{flex:1;min-width:0;display:flex;flex-direction:column;gap:7px}
+    input[type=range]{--p:0%;display:block;direction:ltr;width:100%;height:9px;border-radius:20px;background:linear-gradient(to right,var(--cyan) 0%,var(--cyan) var(--p),#2d4155 var(--p),#2d4155 100%);appearance:none;-webkit-appearance:none;outline:none;cursor:pointer;touch-action:pan-y;margin:7px 0}
+    input[type=range]::-webkit-slider-thumb{appearance:none;-webkit-appearance:none;width:23px;height:23px;background:#dfffff;border:4px solid #38bdc9;border-radius:50%;box-shadow:0 0 0 4px rgba(84,230,238,.1),0 0 17px rgba(84,230,238,.55)}
+    input[type=range]::-moz-range-thumb{width:16px;height:16px;background:#dfffff;border:4px solid #38bdc9;border-radius:50%;box-shadow:0 0 0 4px rgba(84,230,238,.1)}
+    .range-ticks{display:flex;justify-content:space-between;color:#7793aa;font-size:10px;font-family:Arial,sans-serif;direction:ltr}
+    .panel-divider{height:50px;width:1px;background:var(--border);flex:none}
+    .status-area{width:clamp(160px,17vw,265px);flex:none;display:flex;flex-direction:column;gap:8px;align-items:stretch}
+    .status-pill{min-height:37px;display:flex;gap:8px;align-items:center;justify-content:center;border:1px solid rgba(255,193,109,.26);background:rgba(255,193,109,.085);color:#ffd29a;border-radius:11px;padding:7px 11px;text-align:center;font-size:clamp(11px,.95vw,13px);font-weight:700;transition:.22s}
+    .status-pill.success{border-color:rgba(96,243,185,.45);background:rgba(96,243,185,.1);color:var(--green)}
+    .status-pill svg{width:18px;height:18px;flex:none}
+    .secondary-actions{display:flex;gap:8px}
+    .action-btn{min-height:35px;flex:1;display:flex;justify-content:center;align-items:center;gap:6px;border:1px solid rgba(132,174,207,.22);border-radius:10px;background:#1a2c41;color:#cde7f5;font-size:clamp(11px,.9vw,13px);font-weight:700;padding:7px 8px;white-space:nowrap;transition:.18s}
+    .action-btn:hover{background:#243e56;border-color:rgba(84,230,238,.55)}
+    .action-btn svg{width:15px;height:15px}
+    .action-btn.highlight{border-color:rgba(84,230,238,.3);color:var(--cyan)}
+    .overlay{position:absolute;z-index:10;inset:0;background:rgba(3,10,18,.46);display:grid;place-items:center;padding:12px;backdrop-filter:blur(6px)}
+    .overlay[hidden]{display:none}
+    .dialog{position:relative;width:min(440px,100%);max-height:calc(100% - 8px);overflow:auto;border-radius:20px;border:1px solid rgba(84,230,238,.38);padding:clamp(15px,2.8vh,26px);background:linear-gradient(135deg,#1c3045,#132136);box-shadow:0 20px 65px rgba(0,0,0,.44)}
+    .dialog h2{font-size:clamp(18px,1.5vw,22px);margin:0 0 11px;color:#e8ffff}
+    .dialog p{color:#b2cde0;font-size:13px;line-height:1.8;margin:0 0 13px}
+    .dialog .close{position:absolute;top:12px;left:13px;border:1px solid var(--border);background:rgba(255,255,255,.06);color:#d5e8f6;border-radius:10px;width:31px;height:31px;font-size:21px}
+    .math-step{direction:ltr;text-align:center;font-family:Cambria,Georgia,serif;font-size:clamp(19px,2.4vw,25px);margin:8px 0;padding:10px;border:1px solid rgba(106,164,189,.18);background:#102035;border-radius:12px}
+    .math-step:first-of-type{color:#f4faff}.math-step:last-of-type{color:var(--green);border-color:rgba(96,243,185,.35)}
+    .hint-text{color:#e0f8fa!important}
+    .small-note{font-size:11px;color:#8aa9bb;text-align:center}
+    .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
+    @media (max-width:830px){
+      .eq-side,.eq-mark{display:none}
+      .control-panel{flex-wrap:wrap;gap:9px}
+      .slider-group{width:100%;flex-basis:100%}
+      .panel-divider{display:none}
+      .status-area{width:100%;flex-direction:row;align-items:center}
+      .status-pill{flex:1}
+      .secondary-actions{flex:0 0 auto}
+      .slider-title{min-width:72px}
+      .readout{padding:6px 9px}
+    }
+    @media (max-width:510px){
+      .app{padding-left:8px;padding-right:8px;gap:7px}
+      .topbar{min-height:39px}
+      .brand-icon{height:35px;width:35px;border-radius:10px}
+      .brand-icon svg{height:22px;width:22px}
+      .brand-title{font-size:14px}.brand-sub{font-size:10px}
+      .tiny-btn{min-width:34px;height:34px;padding:0 7px;border-radius:9px}
+      .top-actions{gap:5px}
+      .equation-header{min-height:57px;padding:5px 8px;border-radius:13px}
+      .formula{font-size:31px}
+      .stage{border-radius:14px}
+      .stage-caption{font-size:10px;top:9px;right:10px}
+      .stage-number{font-size:9px;top:10px;left:10px}
+      .control-panel{padding:10px 9px;border-radius:14px;gap:9px}
+      .slider-title{min-width:67px}
+      .slider-title span:first-child{font-size:10px}
+      .slider-title span:last-child{font-size:23px}
+      .range-wrap{gap:6px}.step-btn{height:32px;width:32px}
+      .status-area{gap:6px}.status-pill{font-size:11px;min-height:34px;padding:4px 7px}.status-pill svg{height:15px;width:15px}
+      .secondary-actions{gap:5px}.action-btn{font-size:11px;min-height:34px;padding:4px 7px}
+      .action-btn svg{width:13px;height:13px}
+      .readouts{gap:4px}.readout{font-size:11px;padding:5px 8px}.readout.vs{font-size:13px}
+    }
+    @media (max-height:620px){
+      .app{gap:5px;padding-top:5px;padding-bottom:5px}
+      .topbar{min-height:34px}.brand-icon{width:32px;height:32px}
+      .equation-header{min-height:48px;padding:3px 10px}.formula{font-size:29px}
+      .control-panel{padding:7px 10px;gap:7px}.step-btn{height:30px;width:30px}
+      .range-ticks{font-size:9px}.slider-title span:last-child{font-size:21px}
+      .status-pill,.action-btn{min-height:31px}
+    }
+    @media (max-height:490px) and (orientation:landscape){
+      .brand-sub,.stage-caption,.stage-number{display:none}
+      .app{gap:4px}.equation-header{min-height:38px}.formula{font-size:26px}
+      .control-panel{flex-wrap:nowrap;padding:5px 12px}
+      .slider-group{width:auto;flex-basis:auto}.status-area{width:230px;flex-direction:column}
+      .status-pill,.action-btn{min-height:26px;padding:2px 8px}.readouts{bottom:2px}
+    }
+    @media (prefers-reduced-motion:reduce){*,*:before,*:after{transition:none!important;animation:none!important}}
+
+    /* Custom equation designer */
+    .edit-top{gap:4px;display:flex;white-space:nowrap;color:var(--cyan);border-color:rgba(84,230,238,.34)}
+    .equation-picker{flex:none;display:flex;align-items:center;gap:10px;min-height:40px;padding:3px 12px;border:1px solid var(--border);border-radius:12px;background:rgba(18,31,49,.85)}
+    .picker-label{font-size:12px;font-weight:700;color:var(--muted);white-space:nowrap}
+    .equation-picker select{direction:ltr;flex:1;min-width:0;max-width:430px;height:32px;padding:2px 10px;color:#e4f8ff;border:1px solid #385470;border-radius:9px;background:#16293e;font:700 clamp(13px,1.2vw,16px) Cambria,Georgia,serif;cursor:pointer}
+    .edit-equation{flex:none;display:flex;align-items:center;gap:7px;border:1px solid rgba(84,230,238,.4);border-radius:9px;color:#aefbff;background:rgba(84,230,238,.13);padding:7px 12px;font-weight:800;font-size:12px}
+    .edit-equation:hover{background:rgba(84,230,238,.24)}
+    .picker-info{font-size:11px;color:#7f9eb4;white-space:nowrap}
+    .formula{font-family:"Cambria Math",Cambria,Georgia,serif;max-width:100%;overflow:hidden;text-overflow:ellipsis;font-size:clamp(26px,3vw,46px)}
+    .x-input-wrap{display:flex;align-items:center;gap:4px;color:var(--cyan);font-size:21px;font-weight:800;white-space:nowrap}
+    .x-input-wrap input{width:78px;max-width:24vw;padding:4px 5px;border:1px solid #39788a;border-radius:9px;background:#0f2437;color:#c1ffff;font:800 22px Cambria,Georgia,serif;text-align:center}
+    .secondary-actions{flex-wrap:wrap}.secondary-actions .action-btn{min-width:0}
+    .answer-btn{border-color:#386d54;color:#91f5c0}
+    #editorOverlay{position:fixed;z-index:30;inset:0;padding:max(12px,env(safe-area-inset-top)) 12px max(12px,env(safe-area-inset-bottom));background:rgba(3,9,18,.82);backdrop-filter:blur(9px);display:flex;align-items:center;justify-content:center}
+    #editorOverlay[hidden]{display:none}
+    .editor-dialog{width:min(680px,100%);max-height:100%;display:flex;flex-direction:column;overflow:hidden;border:1px solid #487b8c;border-radius:22px;background:linear-gradient(155deg,#182e43,#0f1b2d);box-shadow:0 20px 80px #0009}
+    .editor-head{flex:none;display:flex;justify-content:space-between;align-items:center;padding:15px 18px;border-bottom:1px solid #2d4459}
+    .editor-head h2{margin:0;font-size:19px}.editor-head p{margin:3px 0 0;color:#88aabd;font-size:11px}
+    .editor-close{color:#d5f6fa;background:#24394b;border:1px solid #456070;border-radius:10px;width:34px;height:34px;font-size:25px;line-height:1}
+    .editor-body{overflow:auto;overscroll-behavior:contain;min-height:0;padding:14px 18px;display:flex;flex-direction:column;gap:12px}
+    .editor-section-title{font-size:12px;font-weight:800;color:#93bfd4}
+    .editor-eq-row{display:grid;grid-template-columns:1fr auto 1fr;gap:9px;align-items:end;direction:ltr}
+    .eq-field{display:flex;flex-direction:column;gap:7px;min-width:0}
+    .eq-field label{font-size:12px;color:#a7d2e6;direction:rtl}
+    .eq-field input{width:100%;min-width:0;height:45px;border:1px solid #51798b;border-radius:11px;background:#0b1c2d;color:#f0ffff;direction:ltr;padding:0 11px;text-align:center;font:700 clamp(17px,3vw,25px) "Cambria Math",Cambria,Georgia,serif}
+    .eq-field input:focus{border-color:var(--cyan);background:#152f41;outline:1px solid var(--cyan)}
+    .editor-equals{padding-bottom:6px;font:bold 34px Cambria,serif;color:var(--amber)}
+    .keyboard{display:grid;grid-template-columns:repeat(9,minmax(0,1fr));gap:6px;direction:ltr}
+    .key{border:1px solid #405e74;border-radius:9px;min-height:35px;background:#21374c;color:#f3fdff;font:700 18px "Cambria Math",Cambria,Georgia,serif}
+    .key[data-key="x"]{color:var(--cyan);background:#173e50}.key[data-key="="]{color:#ffc778}.key[data-key="back"],.key[data-key="clear"]{font:700 12px Tahoma,sans-serif;color:#ffd6d6}
+    .key:active{transform:scale(.95)}
+    .builder{border:1px solid #2c4961;border-radius:12px;padding:12px;background:#10263a}
+    .builder-title{display:flex;align-items:center;gap:8px;margin-bottom:9px;font-size:12px;color:#a9d6e6}
+    .builder-values{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;direction:ltr}
+    .builder-values label{min-width:0;display:flex;flex-direction:column;gap:5px;text-align:center;font:700 14px Cambria,serif;color:#aad7e4}
+    .builder-values input{min-width:0;width:100%;height:37px;border:1px solid #3b6276;border-radius:8px;background:#162f44;color:#ebffff;font:700 18px Cambria,serif;text-align:center;direction:ltr}
+    .math-preview{min-height:56px;display:flex;align-items:center;justify-content:space-between;gap:9px;border:1px solid #35556a;border-radius:12px;padding:10px 12px;background:#0d1c2b}
+    .math-preview-text{font:700 clamp(17px,2.2vw,24px) "Cambria Math",Cambria,Georgia,serif;color:#d5f9ff;direction:ltr;overflow-wrap:anywhere}
+    .math-preview-status{font-size:12px;color:var(--green);text-align:end;flex:none}
+    .math-preview.invalid{border-color:#d57780}.math-preview.invalid .math-preview-status{color:#ffc2c8}
+    .editor-note{font-size:11px;color:#84a8b9;line-height:1.6;margin:0}
+    .editor-footer{display:flex;gap:9px;justify-content:flex-end;align-items:center;flex:none;border-top:1px solid #2b455a;padding:12px 18px}
+    .editor-footer button{border-radius:10px;padding:9px 18px;border:1px solid #415a70;color:#e6faff;background:#23374c;font-weight:800}
+    .editor-footer .apply{background:linear-gradient(110deg,#1e8b9b,#147388);border-color:#35c7d3;color:white}
+    .editor-footer .apply:disabled{filter:grayscale(1);opacity:.45;cursor:not-allowed}
+    @media(max-width:1020px){.picker-info{display:none}}
+    @media(max-width:520px){.equation-picker{padding:3px 7px;gap:5px;min-height:36px}.picker-label{display:none}.equation-picker select{height:30px;font-size:13px}.edit-equation{padding:6px 8px;font-size:11px}.edit-top span{display:none}
+    .x-input-wrap{font-size:18px}.x-input-wrap input{width:67px;font-size:19px}.slider-title{min-width:90px}.slider-title span:first-child{font-size:10px}
+    .editor-dialog{border-radius:15px}.editor-head{padding:10px 12px}.editor-head h2{font-size:16px}.editor-body{padding:10px;gap:9px}.editor-footer{padding:9px 12px}
+    .eq-field input{height:42px}.keyboard{grid-template-columns:repeat(6,minmax(0,1fr));gap:5px}.key{min-height:34px}.builder{padding:9px}.builder-values{gap:5px}.builder-values label{font-size:12px}.builder-values input{height:34px}
+    .math-preview{flex-wrap:wrap;min-height:46px;padding:7px}.math-preview-status{font-size:11px}
+    }
+    @media(max-height:630px){.editor-body{gap:8px}.builder{padding:8px}.builder-title{margin-bottom:5px}.key{min-height:29px}.editor-head p{display:none}}
+    @media(max-height:510px) and (orientation:landscape){.editor-dialog{max-width:740px}.editor-body{display:grid;grid-template-columns:1fr 1fr;align-items:start;gap:8px}.editor-body .editor-eq-row{grid-column:1}.editor-body .keyboard{grid-column:1}.editor-body .builder{grid-row:1 / span 2;grid-column:2}.editor-body .math-preview,.editor-body .editor-note{grid-column:2}.editor-body .editor-section-title{display:none}.editor-head{padding:6px 12px}.editor-footer{padding:7px 12px}}
+  
+    [hidden]{display:none!important}
+    .control-dialog{width:min(560px,100%)}
+    .controller-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:16px 0}
+    .controller-grid label{display:grid;gap:7px;font-size:12px;color:var(--muted)}
+    .controller-grid input,.controller-grid select,.operation-row input,.operation-row select{width:100%;min-width:0;padding:10px;border-radius:9px;background:#0b1c2d;border:1px solid #3b6276;color:var(--text);font:inherit;direction:ltr}
+    .toggle-row{display:flex;align-items:center;gap:9px;margin:14px 0;font-size:13px;color:#cde7f5}
+    .toggle-row input{accent-color:var(--cyan);width:18px;height:18px}
+    .operation-row{display:grid;grid-template-columns:1fr 1fr auto;gap:8px;direction:ltr;margin:12px 0}
+    .controller-error{min-height:20px;color:var(--red)!important}
+    .operation-log{padding:10px;border-radius:9px;border:1px solid var(--border);color:var(--muted);font-size:12px;max-height:90px;overflow:auto;direction:ltr;text-align:center}
+    .control-dialog h3{font-size:14px;color:var(--cyan);margin:20px 0 7px}
+    .control-dialog .dialog-close-row{display:flex;gap:8px;margin-top:14px}
+    button:disabled{opacity:.4;cursor:not-allowed}
+    .picker-info{display:none}
+    .stage-number{letter-spacing:.5px}
+    @media(max-width:510px){.controller-grid{gap:6px}.controller-grid input{padding:8px 4px}.controller-grid label{font-size:11px}.equation-picker{flex-wrap:nowrap}.edit-equation{white-space:nowrap}.controller-open{font-size:11px;padding:6px!important}.operation-row{grid-template-columns:1fr 1fr}.operation-row button{grid-column:1/-1}}
+    @media(max-height:530px){.app{overflow:auto}.stage{min-height:170px}.control-panel{padding:8px}.equation-picker{flex-shrink:0}}
+
+</style>
+</head>
+<body>
+<main class="app">
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-icon" aria-hidden="true"><svg viewBox="0 0 28 28" fill="none"><path d="M4 7H24M14 7V22M7 22H21" stroke="#5deaf0" stroke-width="2.2" stroke-linecap="round"/><path d="M4 7L1.7 13.5H6.3L4 7ZM24 7L21.7 13.5H26.3L24 7Z" stroke="#b5faff" stroke-width="1.3"/><circle cx="14" cy="7" r="3" fill="#63edf2"/></svg></span>
+      <div><div class="brand-title" data-i18n="brand">مختبر الميزان الجبري</div><div class="brand-sub" data-i18n="brandSub">تعلّم حل المعادلات بالتجربة</div></div>
+    </div>
+    <div class="top-actions">
+      <button type="button" class="tiny-btn edit-top" id="editTopBtn" title="اختيار معادلة">✎ <span data-i18n="editShort">المعادلة</span></button>
+      <button type="button" class="tiny-btn" id="langBtn" title="Switch language" aria-label="Switch language">EN</button>
+      <button type="button" class="tiny-btn" id="resetBtn" title="إعادة التجربة" aria-label="إعادة التجربة"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 11a9 9 0 1 1 3 6.7"/><path d="M3 4v7h7"/></svg></button>
+    </div>
+  </header>
+
+  <section class="equation-header" aria-label="المعادلة المراد حلها">
+    <div class="eq-mark"><i></i><span data-i18n="task">المعادلة الحالية</span></div>
+    <div class="formula" id="formula" dir="ltr" aria-live="polite"><span class="fx">2x</span> + <span class="fc">3</span> = 11</div>
+    <div class="eq-side"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v3M5 12l2-2 3 3 6-6 3 3M4 19h16"/></svg><span data-i18n="discover">اكتشف قيمة المجهول</span></div>
+  </section>
+
+  <section class="equation-picker" aria-label="اختيار المعادلة">
+    <div class="picker-label" data-i18n="selectEq">اختر معادلة</div>
+    <select id="presetSelect" aria-label="أمثلة للمعادلات" dir="ltr">
+      <option value="2x+3=11">2x + 3 = 11</option>
+      <option value="3x-5=16">3x − 5 = 16</option>
+      <option value="5x+2=2x+14">5x + 2 = 2x + 14</option>
+      <option value="-2x+8=14">−2x + 8 = 14</option>
+      <option value="2(x+3)=14">2(x + 3) = 14</option>
+      <option value="x/2+3=7">x ÷ 2 + 3 = 7</option>
+      <option value="3x+2=10">3x + 2 = 10</option>
+      <option value="custom" data-i18n="custom">معادلة مخصّصة…</option>
+    </select>
+    <button id="editEquation" type="button" class="edit-equation"><span aria-hidden="true">✎</span><span data-i18n="createEq">أنشئ معادلتك</span></button>
+    <button id="controllerBtn" class="edit-equation controller-open" type="button" data-i18n="controls">التحكم</button><span class="picker-info" data-i18n="pickerHint">تحكم في الطرفين والرموز الرياضية</span>
+  </section>
+
+  <section class="stage" id="stage" aria-label="ميزان تفاعلي يوضح طرفي المعادلة">
+    <div class="stage-caption"><span class="dot"></span><span data-i18n="stageTitle">حرّك المنزلق حتى يتوازن الميزان</span></div>
+    <div class="stage-number">EQUATION • 01</div>
+    <svg id="scaleSvg" class="scale-svg" viewBox="0 0 1000 530" role="img" aria-labelledby="svgTitle svgDesc">
+      <title id="svgTitle">ميزان المعادلة الجبرية</title>
+      <desc id="svgDesc">الكفة اليسرى تحمل 2x و3، واليمنى تحمل 11. يتغير الميل بحسب قيمة x.</desc>
+      <defs>
+        <linearGradient id="steel" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#d7f9ff"/><stop offset=".18" stop-color="#74cadc"/><stop offset=".46" stop-color="#1f6d89"/><stop offset=".7" stop-color="#27516d"/><stop offset="1" stop-color="#91dbea"/></linearGradient>
+        <linearGradient id="beamMetal" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a0f5f5"/><stop offset=".22" stop-color="#56bad1"/><stop offset=".55" stop-color="#173c58"/><stop offset="1" stop-color="#3a8ba0"/></linearGradient>
+        <linearGradient id="weightX" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2d8396"/><stop offset=".5" stop-color="#225267"/><stop offset="1" stop-color="#163749"/></linearGradient>
+        <linearGradient id="weightGold" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#956937"/><stop offset=".5" stop-color="#654d2a"/><stop offset="1" stop-color="#3b302a"/></linearGradient>
+        <linearGradient id="column" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#183e5a"/><stop offset=".25" stop-color="#3d8aa5"/><stop offset=".5" stop-color="#a1e3e7"/><stop offset=".7" stop-color="#356b88"/><stop offset="1" stop-color="#16344f"/></linearGradient>
+        <linearGradient id="plate" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9eeaee"/><stop offset=".35" stop-color="#3c9dab"/><stop offset="1" stop-color="#174c65"/></linearGradient>
+        <linearGradient id="floor" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#234562" stop-opacity=".2"/><stop offset="1" stop-color="#12243c" stop-opacity="0"/></linearGradient>
+        <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="9"/></filter>
+        <filter id="glow" x="-100%" y="-100%" width="300%" height="300%"><feGaussianBlur stdDeviation="3.5" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+        <filter id="softGlow" x="-100%" y="-100%" width="300%" height="300%"><feGaussianBlur stdDeviation="2" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+      </defs>
+      <!-- depth grid and floor -->
+      <ellipse cx="500" cy="458" rx="355" ry="39" fill="#0b1521" opacity=".65"/>
+      <ellipse cx="500" cy="464" rx="290" ry="21" fill="#27bbd9" opacity=".13" filter="url(#shadow)"/>
+      <path d="M55 449H945M120 468H880M220 489H780" stroke="#3a7899" opacity=".2"/>
+      <path d="M0 440Q500 427 1000 440V530H0Z" fill="url(#floor)"/>
+      <!-- support, behind beam and pans -->
+      <g id="support">
+        <path d="M486 171L514 171L527 421L473 421Z" fill="url(#column)" stroke="#57b9ca" stroke-width="2"/>
+        <path d="M494 185L499 185L492 418L487 418Z" fill="#d2ffff" opacity=".47"/>
+        <path d="M515 194L521 418" stroke="#14344d" stroke-width="4" opacity=".7"/>
+        <ellipse cx="500" cy="433" rx="101" ry="14" fill="#16324b" opacity=".8"/>
+        <path d="M433 425L567 425L610 455Q605 468 500 467Q395 468 390 455Z" fill="url(#steel)" stroke="#6eb3c2" stroke-width="2"/>
+        <ellipse cx="500" cy="425" rx="68" ry="10" fill="#8edfeb" opacity=".7"/>
+        <path d="M398 453Q500 469 602 453" fill="none" stroke="#6deafa" stroke-width="2" opacity=".75"/>
+        <ellipse cx="500" cy="464" rx="89" ry="5" fill="#051422" opacity=".43"/>
+      </g>
+      <!-- rotating beam -->
+      <g id="beam" transform="rotate(0 500 168)">
+        <path id="beamGlow" d="M212 168L788 168" stroke="#58e7ef" stroke-width="10" opacity=".25" filter="url(#glow)" stroke-linecap="round"/>
+        <path id="beamShape" d="M212 163Q500 153 788 163L788 174Q500 170 212 174Z" fill="url(#beamMetal)" stroke="#75d4df" stroke-width="1.5"/>
+        <path id="beamHighlight" d="M224 163Q500 156 776 163" fill="none" stroke="#d1ffff" stroke-width="1.5" opacity=".62"/>
+        <circle id="leftJoint" cx="212" cy="168" r="8" fill="#c6f9f6" stroke="#45bdd2" stroke-width="4"/>
+        <circle id="rightJoint" cx="788" cy="168" r="8" fill="#d7fdfe" stroke="#45bdd2" stroke-width="4"/>
+      </g>
+      <!-- two hanging pans are repositioned to preserve vertical ropes -->
+      <g id="leftPan" transform="translate(212 168)">
+        <g stroke="#7fe8e8" stroke-width="2.1" opacity=".92" fill="none"><path d="M0 1L-70 128M0 1L70 128"/><path d="M0 1V-4" stroke-width="2.5"/></g>
+        <ellipse cx="0" cy="128" rx="89" ry="13" fill="#071626" opacity=".55"/>
+        <path d="M-88 125Q0 160 88 125L76 141Q0 169-76 141Z" fill="url(#plate)" stroke="#69cad5" stroke-width="1.7"/>
+        <ellipse cx="0" cy="123" rx="88" ry="11" fill="#18485f" stroke="#84d9dc" stroke-width="2"/>
+        <path d="M-78 121Q0 107 78 121" fill="none" stroke="#b6fbfa" opacity=".36" stroke-width="2"/>
+        <g id="leftWeights"></g>
+        <circle cy="0" r="4" fill="#d1ffff" stroke="none"/>
+        <text id="leftMass" x="0" y="190" text-anchor="middle" font-family="Arial" font-size="24" font-weight="700" fill="#6ce7e9" stroke="none" direction="ltr">L = 3</text>
+      </g>
+      <g id="rightPan" transform="translate(788 168)">
+        <g stroke="#a9d9d5" stroke-width="2.1" opacity=".92" fill="none"><path d="M0 1L-70 128M0 1L70 128"/><path d="M0 1V-4" stroke-width="2.5"/></g>
+        <ellipse cx="0" cy="128" rx="89" ry="13" fill="#071626" opacity=".55"/>
+        <path d="M-88 125Q0 160 88 125L76 141Q0 169-76 141Z" fill="url(#plate)" stroke="#7ccbd3" stroke-width="1.7"/>
+        <ellipse cx="0" cy="123" rx="88" ry="11" fill="#204255" stroke="#d8b37c" stroke-width="2"/>
+        <path d="M-78 121Q0 107 78 121" fill="none" stroke="#f7d59a" opacity=".43" stroke-width="2"/>
+        <g id="rightWeights"></g>
+        <circle cy="0" r="4" fill="#ecffec" stroke="none"/>
+        <text id="rightMass" x="0" y="190" text-anchor="middle" font-family="Arial" font-size="24" font-weight="700" fill="#f7c17d" stroke="none" direction="ltr">R = 11</text>
+      </g>
+      <!-- central bearing is on top -->
+      <g id="bearing">
+        <circle cx="500" cy="168" r="27" fill="#0e293a" stroke="#84e7e9" stroke-width="4" filter="url(#softGlow)"/>
+        <circle cx="500" cy="168" r="18" fill="url(#steel)" stroke="#e1ffff" stroke-width="2"/>
+        <circle cx="500" cy="168" r="10" fill="#1c6b81" stroke="#b7faff" stroke-width="3"/>
+        <circle cx="497" cy="164" r="3" fill="#ecffff" stroke="none"/>
+      </g>
+    </svg>
+    <div class="readouts" aria-live="polite">
+      <div class="readout left"><span id="leftLabel">L</span> = <strong id="leftTotal">3</strong></div>
+      <div class="readout vs" id="comparison" aria-label="المقارنة">&lt;</div>
+      <div class="readout right"><span id="rightLabel">R</span> = <strong id="rightTotal">11</strong></div>
+    </div>
+    <div class="overlay" id="overlay" hidden>
+      <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dialogTitle">
+        <button type="button" class="close" id="closeDialog" aria-label="إغلاق">×</button>
+        <h2 id="dialogTitle"></h2>
+        <div id="dialogContent"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="control-panel" aria-label="التحكم في قيمة المجهول">
+    <div class="slider-group">
+      <div class="slider-title"><span data-i18n="sliderLabel">قيمة المجهول</span><label class="x-input-wrap" dir="ltr"><span>x =</span><input type="number" id="xNumber" min="-10000" max="10000" step="any" value="0" aria-label="قيمة x مباشرة"></label></div>
+      <div class="range-wrap">
+        <button class="step-btn" type="button" id="minus" aria-label="إنقاص قيمة x">−</button>
+        <div class="range-track">
+          <label for="xSlider" class="sr-only">قيمة x</label>
+          <input type="range" id="xSlider" min="-10" max="10" step="0.01" value="0" aria-valuetext="x equals zero">
+          <div class="range-ticks"><span id="minTick">−10</span><span id="midTick">0</span><span id="maxTick">10</span></div>
+        </div>
+        <button class="step-btn" type="button" id="plus" aria-label="زيادة قيمة x">+</button>
+      </div>
+    </div>
+    <span class="panel-divider" aria-hidden="true"></span>
+    <div class="status-area">
+      <div class="status-pill" id="status" role="status" aria-live="polite"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v4m0 0L7 18m5-11 5 11M5 18h14"/></svg><span id="statusText">الكفة اليمنى أثقل</span></div>
+      <div class="secondary-actions">
+        <button class="action-btn answer-btn" type="button" id="answerBtn" title="أظهر قيمة الحل"><span data-i18n="showAnswer">أظهر الحل</span></button>
+        <button class="action-btn" type="button" id="hintBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 18h6m-5 3h4m-6-8a6 6 0 1 1 8 0c-1.5 1.2-2 2.1-2 3h-4c0-1-.5-1.8-2-3Z"/></svg><span data-i18n="hint">تلميح</span></button>
+        <button class="action-btn highlight" type="button" id="stepsBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m8 5 4 3 4-3M8 12l4 3 4-3M8 19l4 3 4-3"/></svg><span data-i18n="steps">خطوات الحل</span></button>
+      </div>
+    </div>
+  </section>
+</main>
+
+
+<div class="overlay" id="controllerOverlay" hidden>
+<section class="dialog control-dialog" role="dialog" aria-modal="true" aria-labelledby="controllerTitle">
+<button class="close" id="closeController" aria-label="Close">×</button>
+<h2 id="controllerTitle" data-i18n="controls">التحكم</h2>
+<p data-i18n="controlDesc">اضبط مجال x ودقة الحركة أو طبّق عملية على الطرفين.</p>
+<div class="controller-grid">
+<label><span data-i18n="rangeMin">أصغر قيمة</span><input id="rangeMin" type="number" value="-10" step="any"></label>
+<label><span data-i18n="rangeMax">أكبر قيمة</span><input id="rangeMax" type="number" value="10" step="any"></label>
+<label><span data-i18n="stepSize">مقدار الخطوة</span><select id="stepSize"><option>0.01</option><option>0.1</option><option>0.25</option><option>0.5</option><option selected>1</option><option>2</option><option>5</option></select></label>
+</div>
+<label class="toggle-row"><input type="checkbox" id="autoRange" checked><span data-i18n="autoRange">مجال تلقائي عند تغيير المعادلة</span></label>
+<label class="toggle-row"><input type="checkbox" id="motion" checked><span data-i18n="motion">تحريك الميزان</span></label>
+<label class="toggle-row"><input type="checkbox" id="learner"><span data-i18n="learner">وضع المتعلم: إخفاء الحل والتلميح وخطوات الحل</span></label>
+<button class="action-btn highlight" id="applyControls" data-i18n="applyControls">تطبيق الإعدادات</button>
+<h3 data-i18n="bothSides">نفس العملية على الطرفين</h3>
+<p data-i18n="operationDesc">أضف أو اطرح عدداً أو حداً مثل 2x. الضرب والقسمة بعدد ثابت غير صفري.</p>
+<div class="operation-row"><select id="operation" aria-label="Operation"><option value="+">+</option><option value="-">−</option><option value="*">×</option><option value="/">÷</option></select><input id="operand" value="3" aria-label="Operand" placeholder="3 / 2x"><button class="action-btn highlight" id="applyOperation" data-i18n="applyOp">طبّق</button></div>
+<div class="operation-log" id="operationLog" aria-live="polite"></div>
+<p id="controlError" class="controller-error" role="alert"></p>
+<div class="dialog-close-row"><button class="action-btn" id="undoEquation" data-i18n="undo">تراجع</button><button class="action-btn" id="restoreEquation" data-i18n="restore">المعادلة الأصلية</button></div>
+</section></div>
+
+<div id="editorOverlay" hidden>
+  <section class="editor-dialog" role="dialog" aria-modal="true" aria-labelledby="editorTitle">
+    <div class="editor-head"><div><h2 id="editorTitle" data-i18n="editorTitle">أنشئ معادلتك الخاصة</h2><p data-i18n="editorSubtitle">اكتب طرفَي المعادلة أو استخدم لوحة الرموز الرياضية</p></div><button id="closeEditor" class="editor-close" type="button" aria-label="إغلاق">×</button></div>
+    <div class="editor-body">
+      <div class="editor-section-title" data-i18n="editSides">كتابة طرفَي المعادلة</div>
+      <div class="editor-eq-row">
+        <div class="eq-field"><label for="leftExpression" data-i18n="leftExpr">الطرف الأيسر</label><input id="leftExpression" spellcheck="false" autocomplete="off" inputmode="text" value="2x + 3" aria-label="الطرف الأيسر"></div>
+        <span class="editor-equals">=</span>
+        <div class="eq-field"><label for="rightExpression" data-i18n="rightExpr">الطرف الأيمن</label><input id="rightExpression" spellcheck="false" autocomplete="off" inputmode="text" value="11" aria-label="الطرف الأيمن"></div>
+      </div>
+      <div class="keyboard" id="mathKeyboard" aria-label="لوحة رموز رياضية">
+        <button type="button" class="key" data-key="x">x</button><button type="button" class="key" data-key="7">7</button><button type="button" class="key" data-key="8">8</button><button type="button" class="key" data-key="9">9</button><button type="button" class="key" data-key="+">+</button><button type="button" class="key" data-key="−">−</button><button type="button" class="key" data-key="( ">(</button><button type="button" class="key" data-key=" )">)</button><button type="button" class="key" data-key="back">⌫</button>
+        <button type="button" class="key" data-key="4">4</button><button type="button" class="key" data-key="5">5</button><button type="button" class="key" data-key="6">6</button><button type="button" class="key" data-key="×">×</button><button type="button" class="key" data-key="÷">÷</button><button type="button" class="key" data-key="1">1</button><button type="button" class="key" data-key="2">2</button><button type="button" class="key" data-key="3">3</button><button type="button" class="key" data-key="clear">C</button>
+        <button type="button" class="key" data-key="0">0</button><button type="button" class="key" data-key=".">.</button><button type="button" class="key" data-key="=">=</button>
+      </div>
+      <div class="builder">
+        <div class="builder-title" data-i18n="coeffBuilder">أو كوّن المعادلة من المعاملات: ax + b = cx + d</div>
+        <div class="builder-values">
+          <label>a<input type="number" id="coefA" value="2" step="any"></label>
+          <label>b<input type="number" id="coefB" value="3" step="any"></label>
+          <label>c<input type="number" id="coefC" value="0" step="any"></label>
+          <label>d<input type="number" id="coefD" value="11" step="any"></label>
+        </div>
+      </div>
+      <div class="math-preview" id="previewBox"><span class="math-preview-text" id="equationPreview">2x + 3 = 11</span><span class="math-preview-status" id="previewStatus">x = 4</span></div>
+      <p class="editor-note" data-i18n="editorNote">يدعم المعادلات الخطية: +، −، ×، ÷، الأقواس، الأعداد السالبة والكسور. لا يدعم x² أو القسمة على x.</p>
+    </div>
+    <div class="editor-footer"><button type="button" id="cancelEditor" data-i18n="cancel">إلغاء</button><button type="button" class="apply" id="applyEquation" data-i18n="apply">استخدم المعادلة</button></div>
+  </section>
+</div>
+
+<script>
+(function(){
+'use strict';
+const $=id=>document.getElementById(id);
+const T={
+ ar:{brand:'مختبر الميزان الجبري',brandSub:'جرّب أي معادلة خطية',task:'المعادلة الحالية',discover:'اكتشف قيمة المجهول',stageTitle:'حرّك المنزلق لتوازن طرفَي المعادلة',sliderLabel:'قيمة المجهول',hint:'تلميح',steps:'خطوات الحل',rightHeavy:'قيمة الطرف الأيمن أكبر',leftHeavy:'قيمة الطرف الأيسر أكبر',balanced:'أحسنت! الطرفان متساويان',hintTitle:'تلميح لحل المعادلة',stepsTitle:'خطوات الحل الجبري',reset:'إعادة التجربة',close:'إغلاق',minus:'إنقاص قيمة x',plus:'زيادة قيمة x',editShort:'المعادلة',selectEq:'معادلات جاهزة',custom:'معادلة مخصّصة…',createEq:'أنشئ معادلتك',pickerHint:'غيّر الرموز أو المعاملات كما تشاء',showAnswer:'أظهر الحل',editorTitle:'أنشئ معادلتك الخاصة',editorSubtitle:'اكتب طرفَي المعادلة أو استخدم لوحة الرموز الرياضية',editSides:'اكتب الطرفين',leftExpr:'الطرف الأيسر',rightExpr:'الطرف الأيمن',coeffBuilder:'أو كوّن المعادلة من المعاملات: ax + b = cx + d',editorNote:'يدعم المعادلات الخطية: +، −، ×، ÷، الأقواس، الأعداد السالبة والكسور. لا يدعم x² أو القسمة على x.',cancel:'إلغاء',apply:'استخدم المعادلة',invalid:'تأكد من كتابة معادلة خطية صحيحة',noSolution:'لا يوجد حل',infinite:'كل الأعداد حلول',nonlinear:'المعادلات غير الخطية غير مدعومة',divisionZero:'القسمة على صفر غير مسموحة',numberError:'القيم العددية كبيرة جداً',previewOk:'قيمة الحل',hintSub:'انقل حدود x إلى طرف، والثوابت إلى الطرف الآخر، ثم اقسم على معامل x.',answerNone:'لا توجد قيمة تجعل الطرفين متساويين.',answerMany:'كل قيمة لـ x تجعل الطرفين متساويين.',numbers:'البلاطات تمثّل الحدود الجبرية الموجبة والسالبة.',subX:'نطرح حدّ x من الطرفين',subB:'نطرح الثابت من الطرفين',divide:'نقسم على معامل x',original:'المعادلة الأصلية',result:'التحقق بالتعويض',solution:'الحل',errorSyntax:'صيغة غير صحيحة'},
+ en:{brand:'Algebra Balance Lab',brandSub:'Experiment with any linear equation',task:'Current equation',discover:'Find the unknown value',stageTitle:'Move the slider to balance both sides',sliderLabel:'Unknown value',hint:'Hint',steps:'Solution steps',rightHeavy:'The right-hand side is greater',leftHeavy:'The left-hand side is greater',balanced:'Excellent! Both sides are equal',hintTitle:'A solving hint',stepsTitle:'Algebraic solution steps',reset:'Reset experiment',close:'Close',minus:'Decrease x',plus:'Increase x',editShort:'Equation',selectEq:'Presets',custom:'Custom equation…',createEq:'Build equation',pickerHint:'Edit mathematical operators and coefficients',showAnswer:'Show answer',editorTitle:'Build your own equation',editorSubtitle:'Type both sides or use the math keypad',editSides:'Write both sides',leftExpr:'Left-hand side',rightExpr:'Right-hand side',coeffBuilder:'Or build using coefficients: ax + b = cx + d',editorNote:'Supports linear equations: +, −, ×, ÷, parentheses, negative and fractional numbers. x² and division by x are not supported.',cancel:'Cancel',apply:'Use equation',invalid:'Enter a valid linear equation',noSolution:'No solution',infinite:'Every number is a solution',nonlinear:'Nonlinear expressions are not supported',divisionZero:'Division by zero is not allowed',numberError:'The numbers are too large',previewOk:'Solution',hintSub:'Move x terms to one side and constants to the other, then divide by the x coefficient.',answerNone:'No x value makes the two sides equal.',answerMany:'Every x value makes both sides equal.',numbers:'Tiles represent positive and negative algebraic terms.',subX:'Subtract the x-term from both sides',subB:'Subtract the constant from both sides',divide:'Divide by the x coefficient',original:'Original equation',result:'Check by substitution',solution:'Solution',errorSyntax:'Invalid expression'}
+};
+let manualRange=null, stepSize=1, motionEnabled=true, learnerMode=false, equationHistory=[], originalEquation=null;
+let language='ar',currentAngle=0,targetAngle=0,rafId=0,leftX=212,rightX=788;
+let equation={left:'2x+3',right:'11',L:{a:2,b:3},R:{a:0,b:11},type:'one',solution:4};
+let activeField=$('leftExpression'), draft=null, editing=false;
+const slider=$('xSlider'), xNumber=$('xNumber');
+const EPS=1e-8;
+Object.assign(T.ar,{controls:'التحكم',controlDesc:'اضبط مجال x ودقة الحركة أو طبّق عملية على الطرفين.',rangeMin:'أصغر قيمة',rangeMax:'أكبر قيمة',stepSize:'مقدار الخطوة',autoRange:'مجال تلقائي عند تغيير المعادلة',motion:'تحريك الميزان',learner:'وضع المتعلم: إخفاء الحل والتلميح وخطوات الحل',applyControls:'تطبيق الإعدادات',bothSides:'نفس العملية على الطرفين',operationDesc:'أضف أو اطرح عدداً أو حداً مثل 2x. الضرب والقسمة بعدد ثابت غير صفري.',applyOp:'طبّق',undo:'تراجع',restore:'المعادلة الأصلية',rangeError:'أدخل مجالاً صحيحاً بين −10000 و10000؛ الحد الأدنى أصغر من الأعلى.',opError:'استخدم حداً خطياً للجمع والطرح، وعدداً ثابتاً غير صفري للضرب والقسمة.',applied:'تم تطبيق الإعدادات',rangeNotice:'الحل خارج المجال المحدد. وسّع المجال لتجربته.'});
+Object.assign(T.en,{controls:'Controls',controlDesc:'Set the x range and movement precision, or apply an operation to both sides.',rangeMin:'Minimum x',rangeMax:'Maximum x',stepSize:'Step size',autoRange:'Automatic range for new equations',motion:'Animate balance',learner:'Learner mode: hide answer, hints and solution steps',applyControls:'Apply settings',bothSides:'Same operation on both sides',operationDesc:'Add or subtract a number or term such as 2x. Multiply or divide by a nonzero constant.',applyOp:'Apply',undo:'Undo',restore:'Original equation',rangeError:'Enter a valid range between −10000 and 10000; minimum must be less than maximum.',opError:'Use a linear term for addition/subtraction and a nonzero constant for multiplication/division.',applied:'Settings applied',rangeNotice:'The solution is outside your range. Expand the range to try it.'});
+function t(k){return T[language][k]||k}
+function good(n){return Number.isFinite(n)&&Math.abs(n)<1e8}
+function num(v){if(Math.abs(v)<1e-10)return '0';return Number(Number(v).toFixed(5)).toString().replace(/^-/, '−')}
+function noMinus(n){return num(n).replace('−','-')}
+function approx(a,b){return Math.abs(a-b)<=EPS*Math.max(1,Math.abs(a),Math.abs(b))}
+function norm(s){return String(s).replace(/[٠-٩۰-۹]/g,ch=>{let cp=ch.charCodeAt(0);return String(cp>=0x6F0?cp-0x6F0:cp-0x660)}).replace(/[−–—﹣]/g,'-').replace(/[×·]/g,'*').replace(/[÷]/g,'/').replace(/[٫]/g,'.').replace(/[،]/g,'.').replace(/[سX]/g,'x').replace(/\s+/g,'').replace(/\u200e|\u200f/g,'')}
+function parse(expr){
+ const src=norm(expr);if(!src||src.length>100||/[^0-9.x+\-*/()]/.test(src))throw Error('errorSyntax');
+ const raw=[];let i=0;
+ while(i<src.length){const rest=src.slice(i),m=/^(?:\d+(?:\.\d*)?|\.\d+)/.exec(rest);if(m){raw.push({t:'n',v:Number(m[0])});i+=m[0].length;continue}
+ let c=src[i];if(c==='x'){raw.push({t:'x'});i++;continue}if('+-*/()'.includes(c)){raw.push({t:c});i++;continue}throw Error('errorSyntax')}
+ const tokens=[];
+ for(const next of raw){const prev=tokens[tokens.length-1];if(prev && (prev.t==='n'||prev.t==='x'||prev.t===')') && (next.t==='n'||next.t==='x'||next.t==='(') && !(prev.t==='n'&&next.t==='n'))tokens.push({t:'*'});tokens.push(next)}
+ let j=0;function apply(op,A,B){if(op==='+')return {a:A.a+B.a,b:A.b+B.b};if(op==='-')return {a:A.a-B.a,b:A.b-B.b};if(op==='*'){if(!approx(A.a,0)&&!approx(B.a,0))throw Error('nonlinear');return {a:A.a*B.b+A.b*B.a,b:A.b*B.b}}
+ if(op==='/'){if(!approx(B.a,0))throw Error('nonlinear');if(approx(B.b,0))throw Error('divisionZero');return {a:A.a/B.b,b:A.b/B.b}}throw Error('errorSyntax')}
+ function atom(){if(j>=tokens.length)throw Error('errorSyntax');const o=tokens[j++];if(o.t==='n')return {a:0,b:o.v};if(o.t==='x')return {a:1,b:0};if(o.t==='+')return atom();if(o.t==='-'){const z=atom();return {a:-z.a,b:-z.b}}
+ if(o.t==='('){const z=exprP();if(tokens[j]?.t!==')')throw Error('errorSyntax');j++;return z}throw Error('errorSyntax')}
+ function term(){let z=atom();while(tokens[j]?.t==='*'||tokens[j]?.t==='/'){const op=tokens[j++].t;z=apply(op,z,atom())}return z}
+ function exprP(){let z=term();while(tokens[j]?.t==='+'||tokens[j]?.t==='-'){const op=tokens[j++].t;z=apply(op,z,term())}return z}
+ const p=exprP();if(j!==tokens.length)throw Error('errorSyntax');if(!good(p.a)||!good(p.b))throw Error('numberError');return p;
+}
+function solve(left,right){const L=parse(left),R=parse(right);const a=L.a-R.a,b=R.b-L.b;let type='one',solution=b/a;
+ if(approx(a,0)){type=approx(b,0)?'many':'none';solution=null}else if(!good(solution)||Math.abs(solution)>10000){throw Error('numberError')}
+ return {left:left.trim(),right:right.trim(),L,R,type,solution};}
+function fmtPart(a,b){
+ const terms=[];if(!approx(a,0)){const sign=a<0?'−':'';const mag=Math.abs(a);terms.push(`${sign}${approx(mag,1)?'':num(mag)}x`)}
+ if(!approx(b,0)||terms.length===0){if(terms.length===0)terms.push(num(b));else terms.push(`${b<0?'−':'+'} ${num(Math.abs(b))}`)}
+ return terms.join(' ').replace(/^(−)(\S)/,'−$2');
+}
+function niceExpr(raw){return norm(raw).replace(/\*/g,'×').replace(/\//g,'÷').replace(/-/g,'−').replace(/([+−=])/g,' $1 ').replace(/\s+/g,' ').trim()}
+function mathString(e){return niceExpr(e.left)+' = '+niceExpr(e.right)}
+function setFormula(e){
+ const v=mathString(e),f=$('formula');f.replaceChildren();
+ for(const part of v.split(/(x|\d+(?:\.\d+)?)/g)){if(!part)continue;const el=document.createElement('span');if(part==='x')el.className='fx';else if(/^\d/.test(part))el.className='fc';el.textContent=part;f.append(el)}
+ f.setAttribute('aria-label',v);
+}
+function fraction(v){if(!good(v))return '—';let best=[Math.round(v),1],err=Math.abs(v-best[0]);for(let d=1;d<=100;d++){const n=Math.round(v*d),e=Math.abs(v-n/d);if(e<err){best=[n,d];err=e;}if(e<1e-9)break}
+ if(err<1e-6 && best[1]!==1)return `${num(best[0])}⁄${best[1]}`;return num(v)}
+function calcX(){return Number(xNumber.value)||0}
+function resizeSlider(sol){
+ const w=sol===null||!good(sol)?10:Math.max(10,Math.ceil(Math.abs(sol)+4));
+ const lo=manualRange?manualRange[0]:Math.max(-10000,-w),hi=manualRange?manualRange[1]:Math.min(10000,w);
+ slider.min=lo;slider.max=hi;slider.step=stepSize;
+ xNumber.min=lo;xNumber.max=hi;xNumber.step='any';
+ $('minTick').textContent=num(lo);$('midTick').textContent=num((lo+hi)/2);$('maxTick').textContent=num(hi);
+}
+function setX(x){if(!Number.isFinite(x))return;x=Math.max(Number(slider.min),Math.min(Number(slider.max),x));xNumber.value=Number(x.toFixed(8));slider.value=x;update()}
+function cube(parent,opts){const ns='http://www.w3.org/2000/svg';const g=document.createElementNS(ns,'g');const x=opts.x,y=opts.y,w=opts.w||69,h=opts.h||60;
+ const color=opts.kind==='x'?'#43c6d7':opts.negative?'#ef8d9f':'#e9b66e',dark=opts.kind==='x'?'#1a465d':opts.negative?'#603244':'#68452b';
+ const path=document.createElementNS(ns,'path');path.setAttribute('d',`M${x} ${y}l10 -10 h${w}l-10 10 Z`);path.setAttribute('fill',color);path.setAttribute('opacity','.75');g.append(path);
+ const rect=document.createElementNS(ns,'rect');Object.entries({x,y,width:w,height:h,rx:5,fill:dark,stroke:color,'stroke-width':2.2}).forEach(([k,v])=>rect.setAttribute(k,v));g.append(rect);
+ const side=document.createElementNS(ns,'path');side.setAttribute('d',`M${x+w} ${y}l10 -10 v${h}l-10 10 Z`);side.setAttribute('fill',dark);side.setAttribute('stroke',color);side.setAttribute('stroke-width','1');g.append(side);
+ const shine=document.createElementNS(ns,'rect');Object.entries({x:x+5,y:y+5,width:w-10,height:5,rx:2,fill:color,opacity:.4}).forEach(([k,v])=>shine.setAttribute(k,v));g.append(shine);
+ const text=document.createElementNS(ns,'text');Object.entries({x:x+w/2,y:y+h/2+10,'text-anchor':'middle','font-size':opts.font||24,'font-weight':'800',fill:'#fff6df',stroke:'none'}).forEach(([k,v])=>text.setAttribute(k,v));text.textContent=opts.label;g.append(text);parent.append(g)}
+function drawTiles(side,pair){const group=$(side+'Weights');group.replaceChildren();let tiles=[];
+ if(!approx(pair.a,0))tiles.push({label:(pair.a<0?'−':'')+(approx(Math.abs(pair.a),1)?'':num(Math.abs(pair.a)))+'x',kind:'x',negative:pair.a<0});
+ if(!approx(pair.b,0))tiles.push({label:(pair.b<0?'−':pair.a!==0?'+':'')+num(Math.abs(pair.b)),kind:'n',negative:pair.b<0});
+ if(!tiles.length)tiles=[{label:'0',kind:'n',negative:false}];
+ const w=tiles.length===1?88:69,gap=11,total=tiles.length*w+(tiles.length-1)*gap;
+ tiles.forEach((tile,i)=>cube(group,{...tile,x:-total/2+i*(w+gap),y:tiles.length===1?55:63,w,h:tiles.length===1?65:58,font:tile.label.length>6?16:tile.label.length>4?19:25}));
+}
+function geometry(angle){const a=angle*Math.PI/180,cx=500,cy=168;$('beam').setAttribute('transform',`rotate(${angle} ${cx} ${cy})`);const lx=cx+(leftX-cx)*Math.cos(a),ly=cy+(leftX-cx)*Math.sin(a);const rx=cx+(rightX-cx)*Math.cos(a),ry=cy+(rightX-cx)*Math.sin(a);$('leftPan').setAttribute('transform',`translate(${lx.toFixed(2)} ${ly.toFixed(2)})`);$('rightPan').setAttribute('transform',`translate(${rx.toFixed(2)} ${ry.toFixed(2)})`)}
+function animate(){const diff=targetAngle-currentAngle;if(Math.abs(diff)<.015){currentAngle=targetAngle;geometry(currentAngle);rafId=0;return}currentAngle+=diff*.16;geometry(currentAngle);rafId=requestAnimationFrame(animate)}
+function resize(){const mobile=$('stage').clientWidth<680;leftX=mobile?294:212;rightX=mobile?706:788;$('scaleSvg').setAttribute('viewBox',mobile?'115 5 770 520':'0 0 1000 530');$('beamShape').setAttribute('d',`M${leftX} 163Q500 153 ${rightX} 163L${rightX} 174Q500 170 ${leftX} 174Z`);$('beamGlow').setAttribute('d',`M${leftX} 168L${rightX} 168`);$('beamHighlight').setAttribute('d',`M${leftX+12} 163Q500 156 ${rightX-12} 163`);$('leftJoint').setAttribute('cx',leftX);$('rightJoint').setAttribute('cx',rightX);geometry(currentAngle)}
+function update(){const x=calcX(),L=equation.L.a*x+equation.L.b,R=equation.R.a*x+equation.R.b;let balanced=approx(L,R)||(equation.type==='one'&&Math.abs(x-equation.solution)<0.000005),diff=R-L;
+ targetAngle=balanced?0:Math.max(-12,Math.min(12,12*Math.tanh(diff/Math.max(2,Math.max(Math.abs(L),Math.abs(R))*.25))));
+ $('leftTotal').textContent=num(L);$('rightTotal').textContent=num(R);$('leftMass').textContent=`L = ${num(L)}`;$('rightMass').textContent=`R = ${num(R)}`;$('comparison').textContent=balanced?'=':L<R?'<':'>';$('comparison').setAttribute('aria-label',balanced?'equals':L<R?'less than':'greater than');
+ slider.style.setProperty('--p',`${Math.max(0,Math.min(100,100*(x-Number(slider.min))/(Number(slider.max)-Number(slider.min))))}%`);slider.setAttribute('aria-valuetext',`x = ${num(x)}`);$('minus').disabled=x<=Number(slider.min);$('plus').disabled=x>=Number(slider.max);
+ $('status').classList.toggle('success',balanced);$('statusText').textContent=equation.type==='none'?t('noSolution'):equation.type==='many'?t('infinite'):balanced?t('balanced'):L>R?t('leftHeavy'):t('rightHeavy');if(!motionEnabled){if(rafId)cancelAnimationFrame(rafId);rafId=0;currentAngle=targetAngle;geometry(currentAngle)}else if(!rafId)rafId=requestAnimationFrame(animate)}
+function setEquation(e,presetValue,keepHistory=false){if(!keepHistory){equationHistory=[];originalEquation=e;}equation=e;setFormula(e);drawTiles('left',e.L);drawTiles('right',e.R);resizeSlider(e.solution);if(presetValue!==undefined)$('presetSelect').value=presetValue;else $('presetSelect').value='custom';setX(keepHistory?calcX():0);$('svgDesc').textContent=mathString(e);$('stage').setAttribute('aria-label',mathString(e))}
+function translate(){document.documentElement.lang=language;document.documentElement.dir=language==='ar'?'rtl':'ltr';document.querySelectorAll('[data-i18n]').forEach(n=>n.textContent=t(n.dataset.i18n));$('langBtn').textContent=language==='ar'?'EN':'عربي';$('resetBtn').title=t('reset');$('resetBtn').setAttribute('aria-label',t('reset'));$('closeDialog').setAttribute('aria-label',t('close'));$('closeEditor').setAttribute('aria-label',t('close'));$('minus').setAttribute('aria-label',t('minus'));$('plus').setAttribute('aria-label',t('plus'));$('editTopBtn').title=t('createEq');$('xNumber').setAttribute('aria-label',t('sliderLabel'));update();previewEquation()}
+function addStep(container,label,expr){const p=document.createElement('p');p.textContent=label;p.style.marginBottom='3px';container.append(p);const div=document.createElement('div');div.className='math-step';div.textContent=expr;container.append(div)}
+function openDialog(kind){$('dialogTitle').textContent=t(kind==='hint'?'hintTitle':'stepsTitle');const content=$('dialogContent');content.replaceChildren();const e=equation;
+ if(kind==='hint'){const p=document.createElement('p');p.className='hint-text';p.textContent=t('hintSub')+' '+t('numbers');content.append(p);
+ const q=document.createElement('div');q.className='math-step';q.textContent=`(${num(e.L.a)} − ${num(e.R.a)})x = ${num(e.R.b)} − (${num(e.L.b)})`;content.append(q)}
+ else{addStep(content,t('original'),mathString(e));addStep(content,t('subX'),`${fmtPart(e.L.a-e.R.a,e.L.b)} = ${num(e.R.b)}`);addStep(content,t('subB'),`${fmtPart(e.L.a-e.R.a,0)} = ${num(e.R.b-e.L.b)}`);
+ if(e.type==='one'){addStep(content,t('divide'),`x = (${num(e.R.b-e.L.b)}) ÷ (${num(e.L.a-e.R.a)}) = ${fraction(e.solution)}`);const L=e.L.a*e.solution+e.L.b,R=e.R.a*e.solution+e.R.b;addStep(content,t('result'),`${num(L)} = ${num(R)} ✓`)}else{addStep(content,t('solution'),e.type==='none'?`0x = ${num(e.R.b-e.L.b)} → ${t('noSolution')}`:`0x = 0 → ${t('infinite')}`)}}
+ $('overlay').hidden=false;$('closeDialog').focus()}
+function splitEquation(val){const q=val.replace(/＝/g,'=');if(q.includes('=')){const parts=q.split('=');if(parts.length!==2)return false;$('leftExpression').value=parts[0];$('rightExpression').value=parts[1];return true}return false}
+function previewEquation(){const L=$('leftExpression').value,R=$('rightExpression').value;
+ try{const result=solve(L,R);draft=result;$('previewBox').classList.remove('invalid');$('equationPreview').textContent=mathString(result);$('previewStatus').textContent=result.type==='one'?`x = ${fraction(result.solution)}`:t(result.type==='none'?'noSolution':'infinite');$('applyEquation').disabled=false;return result}
+ catch(ex){draft=null;$('previewBox').classList.add('invalid');$('equationPreview').textContent=(L||'…')+' = '+(R||'…');$('previewStatus').textContent=t(T.ar[ex.message]?ex.message:'invalid');$('applyEquation').disabled=true;return null}}
+function setBuilderFields(result){if(!result)return;[['coefA',result.L.a],['coefB',result.L.b],['coefC',result.R.a],['coefD',result.R.b]].forEach(([id,v])=>$(id).value=Number(v.toFixed(6)))}
+function updateDraft(){const q=$('leftExpression').value;if(splitEquation(q)){activeField=$('rightExpression');activeField.focus()}const result=previewEquation();if(result)setBuilderFields(result)}
+function onBuilderInput(){const a=Number($('coefA').value),b=Number($('coefB').value),c=Number($('coefC').value),d=Number($('coefD').value);if(![a,b,c,d].every(good)){draft=null;$('applyEquation').disabled=true;$('previewStatus').textContent=t('numberError');return}
+ $('leftExpression').value=fmtPart(a,b);$('rightExpression').value=fmtPart(c,d);previewEquation()}
+function openEditor(){editing=true;$('leftExpression').value=niceExpr(equation.left);$('rightExpression').value=niceExpr(equation.right);activeField=$('leftExpression');const result=previewEquation();setBuilderFields(result);$('editorOverlay').hidden=false;activeField.focus();activeField.select()}
+function closeEditor(){editing=false;$('editorOverlay').hidden=true}
+function typeKey(k){if(!activeField||!['leftExpression','rightExpression'].includes(activeField.id))activeField=$('leftExpression');const f=activeField;f.focus();let st=f.selectionStart??f.value.length,en=f.selectionEnd??st;
+ if(k==='='){activeField=$('rightExpression');activeField.focus();return}
+ if(k==='clear'){f.value='';f.setSelectionRange(0,0)}else if(k==='back'){if(st===en)st=Math.max(0,st-1);f.setRangeText('',st,en,'end')}else{f.setRangeText(k.trim(),st,en,'end')}updateDraft()}
+// Interactions
+$('presetSelect').addEventListener('change',function(){if(this.value==='custom'){openEditor();return}const pieces=this.value.split('=');setEquation(solve(pieces[0],pieces[1]),this.value)});
+$('editEquation').addEventListener('click',openEditor);$('editTopBtn').addEventListener('click',openEditor);
+$('closeEditor').addEventListener('click',closeEditor);$('cancelEditor').addEventListener('click',closeEditor);
+$('editorOverlay').addEventListener('pointerdown',e=>{if(e.target===$('editorOverlay'))closeEditor()});
+$('leftExpression').addEventListener('input',updateDraft);$('rightExpression').addEventListener('input',updateDraft);
+['leftExpression','rightExpression'].forEach(id=>$(id).addEventListener('focus',()=>activeField=$(id)));
+['coefA','coefB','coefC','coefD'].forEach(id=>$(id).addEventListener('input',onBuilderInput));
+$('mathKeyboard').addEventListener('click',e=>{const key=e.target.closest('[data-key]');if(key)typeKey(key.dataset.key)});
+$('applyEquation').addEventListener('click',()=>{if(!draft)return;setEquation(draft);closeEditor()});
+$('langBtn').addEventListener('click',()=>{language=language==='ar'?'en':'ar';translate()});
+$('resetBtn').addEventListener('click',()=>{setX(0);$('overlay').hidden=true});
+$('minus').addEventListener('click',()=>setX(calcX()-stepSize));$('plus').addEventListener('click',()=>setX(calcX()+stepSize));
+$('xNumber').addEventListener('input',()=>{if(xNumber.value!==''&&Number.isFinite(Number(xNumber.value))){const n=Number(xNumber.value);if(n>=Number(slider.min)&&n<=Number(slider.max)){slider.value=n;update()}}});
+$('xNumber').addEventListener('change',()=>setX(calcX()));
+slider.addEventListener('input',()=>{xNumber.value=slider.value;update()});
+$('answerBtn').addEventListener('click',()=>{if(equation.type==='one'){if(equation.solution<Number(slider.min)||equation.solution>Number(slider.max)){openController();$('controlError').textContent=t('rangeNotice')}else setX(equation.solution)}else openDialog('steps')});
+$('hintBtn').addEventListener('click',()=>openDialog('hint'));$('stepsBtn').addEventListener('click',()=>openDialog('steps'));
+$('closeDialog').addEventListener('click',()=>$('overlay').hidden=true);$('overlay').addEventListener('click',e=>{if(e.target===$('overlay'))$('overlay').hidden=true});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){$('overlay').hidden=true;closeEditor();$('controllerOverlay').hidden=true}else if(e.key==='Enter'&&editing&&draft&&['leftExpression','rightExpression'].includes(document.activeElement.id)){$('applyEquation').click()}});
+window.addEventListener('resize',resize,{passive:true});if('ResizeObserver' in window)new ResizeObserver(resize).observe($('stage'));
+
+function syncController(){
+ $('rangeMin').value=slider.min;$('rangeMax').value=slider.max;
+ $('undoEquation').disabled=!equationHistory.length;
+ $('restoreEquation').disabled=!equationHistory.length;
+ $('operationLog').textContent=equationHistory.length?mathString(originalEquation)+' → '+mathString(equation):mathString(equation);
+}
+function openController(){syncController();$('controlError').textContent='';$('controllerOverlay').hidden=false;$('closeController').focus()}
+$('controllerBtn').onclick=openController;
+$('closeController').onclick=()=>{$('controllerOverlay').hidden=true;$('controllerBtn').focus()};
+$('controllerOverlay').addEventListener('click',e=>{if(e.target===$('controllerOverlay'))$('closeController').click()});
+$('applyControls').onclick=()=>{
+ const lo=Number($('rangeMin').value),hi=Number($('rangeMax').value);
+ if($('rangeMin').value===''||$('rangeMax').value===''||!Number.isFinite(lo)||!Number.isFinite(hi)||lo>=hi||lo< -10000||hi>10000){$('controlError').textContent=t('rangeError');return}
+ manualRange=$('autoRange').checked?null:[lo,hi];stepSize=Number($('stepSize').value);motionEnabled=$('motion').checked;learnerMode=$('learner').checked;
+ ['answerBtn','hintBtn','stepsBtn'].forEach(id=>$(id).hidden=learnerMode);
+ resizeSlider(equation.solution);setX(calcX());syncController();$('controlError').textContent=t('applied');
+};
+['rangeMin','rangeMax'].forEach(id=>$(id).addEventListener('input',()=>$('autoRange').checked=false));
+$('applyOperation').onclick=()=>{
+ try{const raw=$('operand').value,op=$('operation').value,P=parse(raw);
+ if((op==='*'||op==='/')&&(!approx(P.a,0)||approx(P.b,0)))throw Error('opError');
+ const e=solve(`(${equation.rawLeft||equation.left})${op}(${raw})`,`(${equation.rawRight||equation.right})${op}(${raw})`);
+ // Store simplified coefficients to keep expressions compact after repeated operations.
+ e.left=fmtPart(e.L.a,e.L.b);e.right=fmtPart(e.R.a,e.R.b);
+ e.rawLeft=`(${equation.rawLeft||equation.left})${op}(${raw})`;e.rawRight=`(${equation.rawRight||equation.right})${op}(${raw})`;
+ equationHistory.push(equation);setEquation(e,undefined,true);syncController();$('controlError').textContent='';
+ }catch(err){$('controlError').textContent=t(err.message==='opError'?'opError':err.message)}
+};
+$('undoEquation').onclick=()=>{if(!equationHistory.length)return;const e=equationHistory.pop();setEquation(e,undefined,true);syncController()};
+$('restoreEquation').onclick=()=>{if(originalEquation){const e=originalEquation;setEquation(e);syncController()}};
+// Keep keyboard focus inside the active dialog.
+document.addEventListener('keydown',e=>{if(e.key!=='Tab')return;const box=!$('controllerOverlay').hidden?$('controllerOverlay'):!$('editorOverlay').hidden?$('editorOverlay'):!$('overlay').hidden?$('overlay'):null;if(!box)return;const items=[...box.querySelectorAll('button,input,select,[tabindex="0"]')].filter(n=>!n.disabled&&!n.hidden&&n.getClientRects().length);const first=items[0],last=items.at(-1);if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus()}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus()}});
+motionEnabled=!window.matchMedia('(prefers-reduced-motion:reduce)').matches;$('motion').checked=motionEnabled;
+
+setEquation(solve('2x+3','11'),'2x+3=11');resize();translate();
+if(window.matchMedia('(prefers-reduced-motion:reduce)').matches){currentAngle=targetAngle;geometry(currentAngle)}
+})();
+</script>
+</body>
+</html>
